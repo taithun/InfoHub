@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRC InfoHub — HR Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple-deep: #4a1a6e;
+    --purple-mid:  #7b2d9e;
+    --purple-light:#c084fc;
+    --purple-pale: #f3e8ff;
+    --teal:        #0d9488;
+    --teal-light:  #99f6e4;
+    --amber:       #f59e0b;
+    --rose:        #f43f5e;
+    --green:       #22c55e;
+    --bg:          #0f0a1e;
+    --bg2:         #1a1030;
+    --card:        #1e1535;
+    --card2:       #261c42;
+    --border:      rgba(192,132,252,0.15);
+    --text:        #f0e9ff;
+    --text-muted:  #a78bca;
+    --font-th:     'Sarabun', sans-serif;
+    --font-head:   'Kanit', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font-th);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0d0720 0%, #2d1060 50%, #0d0720 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 32px rgba(123,45,158,0.3);
+  }
+  .logo-area { display: flex; align-items: center; gap: 14px; }
+  .logo-circle {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: conic-gradient(from 0deg, #7b2d9e, #c084fc, #0d9488, #7b2d9e);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-head); font-weight: 700; font-size: 13px; color: #fff;
+    flex-shrink: 0;
+  }
+  .logo-text { font-family: var(--font-head); font-size: 26px; font-weight: 700;
+    background: linear-gradient(90deg, #c084fc, #38bdf8, #c084fc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-size: 200%; animation: shimmer 3s linear infinite;
+  }
+  @keyframes shimmer { to { background-position: 200%; } }
+  .owl { font-size: 36px; filter: drop-shadow(0 0 8px #c084fc); }
+
+  /* ── LAYOUT ── */
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 72px); }
+
+  /* ── SIDEBAR ── */
+  aside {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 16px 12px;
+    overflow-y: auto;
+  }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 12px; margin-bottom: 16px;
+  }
+  .search-box input {
+    background: none; border: none; outline: none;
+    color: var(--text); font-family: var(--font-th); font-size: 13px; width: 100%;
+  }
+  .search-box input::placeholder { color: var(--text-muted); }
+  .search-icon { color: var(--text-muted); font-size: 14px; }
+
+  .filter-section { margin-bottom: 16px; }
+  .filter-label {
+    font-size: 11px; font-weight: 600; color: var(--purple-light);
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 8px; padding: 0 4px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .filter-label .reset { cursor: pointer; opacity: 0.6; font-size: 10px; }
+  .filter-label .reset:hover { opacity: 1; color: var(--amber); }
+
+  .tag-list { display: flex; flex-direction: column; gap: 4px; }
+  .tag {
+    padding: 6px 10px; border-radius: 6px; font-size: 12px;
+    cursor: pointer; transition: all 0.15s;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+  }
+  .tag:hover { background: var(--card2); color: var(--text); }
+  .tag.active {
+    background: linear-gradient(135deg, var(--purple-deep), var(--purple-mid));
+    border-color: var(--purple-light);
+    color: #fff;
+  }
+
+  .khet-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; }
+  .khet-tag {
+    padding: 5px 4px; border-radius: 5px; font-size: 11px; text-align: center;
+    cursor: pointer; transition: all 0.15s;
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .khet-tag:hover { border-color: var(--purple-light); color: var(--text); }
+  .khet-tag.active { background: var(--purple-mid); border-color: var(--purple-light); color: #fff; }
+
+  /* ── MAIN ── */
+  main { padding: 20px 24px; overflow-y: auto; }
+
+  /* ── STAT CARDS ── */
+  .stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    position: relative; overflow: hidden;
+    transition: transform 0.2s;
+  }
+  .stat-card:hover { transform: translateY(-2px); }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  }
+  .stat-card.s1::before { background: linear-gradient(90deg, var(--purple-mid), var(--purple-light)); }
+  .stat-card.s2::before { background: linear-gradient(90deg, var(--teal), var(--teal-light)); }
+  .stat-card.s3::before { background: linear-gradient(90deg, var(--amber), #fde68a); }
+  .stat-card.s4::before { background: linear-gradient(90deg, var(--rose), #fda4af); }
+  .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 700; line-height: 1; }
+  .stat-unit  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+  .stat-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
+    margin-top: 6px;
+  }
+  .badge-up   { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-down { background: rgba(244,63,94,0.15);  color: var(--rose); }
+
+  /* ── CONTENT TABLE ── */
+  .content-table {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+  }
+  .table-header {
+    display: grid; grid-template-columns: 40px 1fr 140px 120px 120px;
+    background: linear-gradient(135deg, var(--purple-deep), var(--purple-mid));
+    padding: 12px 16px;
+    font-size: 12px; font-weight: 600; color: #e9d5ff;
+  }
+  .content-row {
+    display: grid; grid-template-columns: 40px 1fr 140px 120px 120px;
+    padding: 11px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s; align-items: center;
+  }
+  .content-row:last-child { border-bottom: none; }
+  .content-row:hover { background: var(--card2); }
+  .content-num { font-family: var(--font-head); color: var(--purple-light); font-weight: 600; }
+  .content-title { color: var(--text); }
+  .content-title span { display: block; font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .num-val { font-family: var(--font-head); font-weight: 600; }
+  .pct-val { font-family: var(--font-head); font-weight: 600; color: var(--teal-light); }
+  .link-btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 6px; font-size: 11px;
+    background: rgba(13,148,136,0.15); color: var(--teal-light);
+    border: 1px solid rgba(13,148,136,0.3);
+    cursor: pointer; transition: all 0.15s; text-decoration: none;
+  }
+  .link-btn:hover { background: rgba(13,148,136,0.3); }
+
+  /* ── HR TABLE ── */
+  .section-title {
+    font-family: var(--font-head); font-size: 15px; font-weight: 600;
+    color: var(--purple-light); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .hr-table-wrap {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .hr-table-header {
+    display: grid; grid-template-columns: 180px 1fr 70px 70px 70px 70px;
+    background: linear-gradient(135deg, var(--purple-deep), var(--purple-mid));
+    padding: 11px 16px;
+    font-size: 12px; font-weight: 600; color: #e9d5ff;
+    position: sticky; top: 0;
+  }
+  .hr-row {
+    display: grid; grid-template-columns: 180px 1fr 70px 70px 70px 70px;
+    padding: 9px 16px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s; align-items: center;
+  }
+  .hr-row:nth-child(even) { background: rgba(255,255,255,0.02); }
+  .hr-row:hover { background: var(--card2); }
+  .emp-id { font-size: 11px; color: var(--text-muted); }
+  .emp-name { font-weight: 600; color: var(--text); }
+  .emp-sangkad { font-size: 11px; color: var(--purple-light); margin-top: 1px; }
+  .check { width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; margin: auto; }
+  .chk-y { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .chk-n { background: rgba(244,63,94,0.08); color: rgba(244,63,94,0.5); border: 1px solid rgba(244,63,94,0.15); }
+
+  .export-bar {
+    display: flex; align-items: center; justify-content: between;
+    padding: 10px 16px;
+    background: var(--bg2); border-top: 1px solid var(--border);
+    gap: 10px; flex-wrap: wrap;
+  }
+  .export-info { font-size: 12px; color: var(--text-muted); flex: 1; }
+  .export-info strong { color: var(--text); }
+  .btn {
+    padding: 7px 16px; border-radius: 7px; font-size: 12px;
+    font-family: var(--font-th); cursor: pointer; font-weight: 600;
+    border: none; transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--purple-mid), #9333ea); color: #fff; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--purple-light); color: var(--text); }
+
+  /* progress bar */
+  .pct-bar { display: flex; align-items: center; gap: 8px; }
+  .bar-bg { flex: 1; height: 6px; background: rgba(255,255,255,0.07); border-radius: 999px; }
+  .bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--teal), var(--teal-light)); }
+
+  .scrollable-table { max-height: 420px; overflow-y: auto; }
+
+  /* tag active highlight */
+  .active-filter-strip {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; min-height: 24px;
+  }
+  .active-chip {
+    padding: 3px 10px; border-radius: 999px; font-size: 11px;
+    background: rgba(192,132,252,0.15); border: 1px solid rgba(192,132,252,0.4);
+    color: var(--purple-light); display: flex; align-items: center; gap: 4px;
+  }
+  .active-chip .rm { cursor: pointer; opacity: 0.7; } .active-chip .rm:hover { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-area">
+    <div class="logo-circle">GRC</div>
+    <div class="logo-text">InfoHub</div>
+  </div>
+  <div style="font-size:12px;color:var(--text-muted);">HR Compliance Dashboard · กฟภ.</div>
+  <div class="owl">🦉</div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="ค้นหาชื่อ / รหัส...">
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">สายงาน <span class="reset" onclick="clearFilter('sai')">รีเซ็ต ↺</span></div>
+      <div class="tag-list" id="filter-sai">
+        <div class="tag" data-group="sai" data-val="สายงาน (น)" onclick="toggleFilter(this)">สายงานภาคเหนือ (น)</div>
+        <div class="tag" data-group="sai" data-val="สายงาน (ต)" onclick="toggleFilter(this)">สายงานภาคใต้ (ต)</div>
+        <div class="tag" data-group="sai" data-val="สายงาน (ก)" onclick="toggleFilter(this)">สายงานภาคกลาง (ก)</div>
+        <div class="tag" data-group="sai" data-val="ฝ่ายเลขาฯ (ฝลอ)" onclick="toggleFilter(this)">ฝ่ายเลขาการองค์กร (ฝลอ)</div>
+        <div class="tag" data-group="sai" data-val="สายงานโลจิสติกส์ (ล)" onclick="toggleFilter(this)">สายงานโลจิสติกส์ (ล)</div>
+        <div class="tag" data-group="sai" data-val="สายงานดิจิทัล (ดส)" onclick="toggleFilter(this)">สายงานดิจิทัล (ดส)</div>
+        <div class="tag" data-group="sai" data-val="สายงานบัญชี (บ)" onclick="toggleFilter(this)">สายงานบัญชีและการเงิน (บ)</div>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-label">เขต <span class="reset" onclick="clearFilter('khet')">รีเซ็ต ↺</span></div>
+      <div class="khet-grid" id="filter-khet">
+        <div class="khet-tag" data-group="khet" data-val="กฟก.1" onclick="toggleFilter(this)">กฟก.1</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟฉ.1" onclick="toggleFilter(this)">กฟฉ.1</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟต.1" onclick="toggleFilter(this)">กฟต.1</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟน.1" onclick="toggleFilter(this)">กฟน.1</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟก.2" onclick="toggleFilter(this)">กฟก.2</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟฉ.2" onclick="toggleFilter(this)">กฟฉ.2</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟต.2" onclick="toggleFilter(this)">กฟต.2</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟน.2" onclick="toggleFilter(this)">กฟน.2</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟก.3" onclick="toggleFilter(this)">กฟก.3</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟฉ.3" onclick="toggleFilter(this)">กฟฉ.3</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟต.3" onclick="toggleFilter(this)">กฟต.3</div>
+        <div class="khet-tag" data-group="khet" data-val="กฟน.3" onclick="toggleFilter(this)">กฟน.3</div>
+      </div>
+    </div>
+
+    <div class="filter-section" id="section-changwat">
+      <div class="filter-label">
+        การไฟฟ้าจังหวัด (กฟจ.)
+        <span class="reset" onclick="clearFilter('changwat')">รีเซ็ต ↺</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;padding:0 2px;" id="changwat-hint">
+        ⬆ เลือกเขตเพื่อกรอง กฟจ.
+      </div>
+      <div id="filter-changwat" style="display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto;"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- Active Filters -->
+    <div class="active-filter-strip" id="activeFilters"></div>
+
+    <!-- STAT ROW -->
+    <div class="stat-row">
+      <div class="stat-card s1">
+        <div class="stat-value" id="statTotal">32,467</div>
+        <div class="stat-unit">คน</div>
+        <div class="stat-label">พนักงานทั้งหมด</div>
+        <span class="stat-badge badge-up">▲ 1.2% จากปีที่แล้ว</span>
+      </div>
+      <div class="stat-card s2">
+        <div class="stat-value" style="color:var(--teal-light)" id="statPct">17.98%</div>
+        <div class="stat-unit">% การรับทราบ</div>
+        <div class="stat-label">เฉลี่ยทุกสื่อ</div>
+        <div class="pct-bar" style="margin-top:8px;">
+          <div class="bar-bg"><div class="bar-fill" id="pctBar" style="width:17.98%"></div></div>
+        </div>
+      </div>
+      <div class="stat-card s3">
+        <div class="stat-value" style="color:var(--amber)" id="statDone">4,056</div>
+        <div class="stat-unit">คน</div>
+        <div class="stat-label">รับทราบครบถ้วน (ทุกสื่อ)</div>
+        <span class="stat-badge badge-up">▲ ครบ 4 ฉบับ</span>
+      </div>
+      <div class="stat-card s4">
+        <div class="stat-value" style="color:var(--rose)" id="statPending">28,411</div>
+        <div class="stat-unit">คน</div>
+        <div class="stat-label">ยังไม่รับทราบครบ</div>
+        <span class="stat-badge badge-down">▼ ต้องติดตาม</span>
+      </div>
+    </div>
+
+    <!-- CONTENT TABLE -->
+    <div class="section-title">📋 สื่อประชาสัมพันธ์</div>
+    <div class="content-table" style="margin-bottom:20px;">
+      <div class="table-header">
+        <div>No.</div><div>สื่อประชาสัมพันธ์</div>
+        <div style="text-align:right">การรับทราบ (คน)</div>
+        <div style="text-align:right">การรับทราบ (%)</div>
+        <div style="text-align:center">Link</div>
+      </div>
+      <div class="content-row">
+        <div class="content-num">#1</div>
+        <div class="content-title">Newsletter ฉบับที่ 3-2569</div>
+        <div class="num-val" style="text-align:right">4,608</div>
+        <div class="pct-val" style="text-align:right">14.09%</div>
+        <div style="text-align:center"><a class="link-btn" href="#">🔗 เข้ารับทราบ</a></div>
+      </div>
+      <div class="content-row">
+        <div class="content-num">#2</div>
+        <div class="content-title">Newsletter ฉบับที่ 4-2569</div>
+        <div class="num-val" style="text-align:right">6,513</div>
+        <div class="pct-val" style="text-align:right">19.92%</div>
+        <div style="text-align:center"><a class="link-btn" href="#">🔗 เข้ารับทราบ</a></div>
+      </div>
+      <div class="content-row">
+        <div class="content-num">#3</div>
+        <div class="content-title">Newsletter ฉบับที่ 5-2569</div>
+        <div class="num-val" style="text-align:right">6,235</div>
+        <div class="pct-val" style="text-align:right">19.07%</div>
+        <div style="text-align:center"><a class="link-btn" href="#">🔗 เข้ารับทราบ</a></div>
+      </div>
+      <div class="content-row">
+        <div class="content-num">#4</div>
+        <div class="content-title">บทความ Compliance 1/2569
+          <span>(30–180–30 และ 30 วันเส้นตายที่ "ห้ามพลาด")</span>
+        </div>
+        <div class="num-val" style="text-align:right">6,169</div>
+        <div class="pct-val" style="text-align:right">18.86%</div>
+        <div style="text-align:center"><a class="link-btn" href="#">🔗 เข้ารับทราบ</a></div>
+      </div>
+    </div>
+
+    <!-- HR TABLE -->
+    <div class="section-title">👤 รายชื่อพนักงาน</div>
+    <div class="hr-table-wrap">
+      <div class="hr-table-header">
+        <div>ชื่อ-นามสกุล / สังกัด</div>
+        <div></div>
+        <div style="text-align:center">#1</div>
+        <div style="text-align:center">#2</div>
+        <div style="text-align:center">#3</div>
+        <div style="text-align:center">#4</div>
+      </div>
+      <div class="scrollable-table" id="hrTableBody"></div>
+      <div class="export-bar">
+        <div class="export-info">แสดง <strong id="showCount">0</strong> จาก <strong id="totalCount">0</strong> รายการ</div>
+        <button class="btn btn-outline" onclick="exportCSV()">📄 Export CSV</button>
+        <button class="btn btn-primary" onclick="exportExcel()">📊 Export Excel</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── Mock Data ──
+// กฟจ. master list per เขต
+const CHANGWAT_BY_KHET = {
+  "กฟก.1": ["กฟจ.กท.","กฟจ.นบ.","กฟจ.ปท.","กฟจ.อย."],
+  "กฟก.2": ["กฟจ.สบ.","กฟจ.ลบ.","กฟจ.สห.","กฟจ.อท."],
+  "กฟก.3": ["กฟจ.นม.","กฟจ.บร.","กฟจ.สร.","กฟจ.ชย."],
+  "กฟฉ.1": ["กฟจ.ชบ.","กฟจ.รย.","กฟจ.จบ.","กฟจ.สก."],
+  "กฟฉ.2": ["กฟจ.ปจ.","กฟจ.สป.","กฟจ.นย.","กฟจ.ฉช."],
+  "กฟฉ.3": ["กฟจ.สอ.","กฟจ.อจ.","กฟจ.บก.","กฟจ.มห."],
+  "กฟต.1": ["กฟจ.ปข.","กฟจ.รน.","กฟจ.ชพ.","กฟจ.สฎ."],
+  "กฟต.2": ["กฟจ.สข.","กฟจ.พท.","กฟจ.นธ.","กฟจ.ปน."],
+  "กฟต.3": ["กฟจ.กบ.","กฟจ.ตง.","กฟจ.สต.","กฟจ.ยล."],
+  "กฟน.1": ["กฟจ.ชม.","กฟจ.ลป.","กฟจ.พย.","กฟจ.นน."],
+  "กฟน.2": ["กฟจ.พล.","กฟจ.ตก.","กฟจ.นน.","กฟจ.พจ.","กฟจ.พร.","กฟจ.กพ."],
+  "กฟน.3": ["กฟจ.อด.","กฟจ.สน.","กฟจ.มส.","กฟจ.นพ."],
+};
+
+const ALL_DATA = [
+  {id:"322606",name:"สุพจน์ ศาเหลือง",  sai:"สายงาน (ก)", khet:"กฟก.1", changwat:"กฟจ.กท.", sakha:"ผวก.", checks:[1,1,1,1]},
+  {id:"327761",name:"สมชาย ทรงศิริ",    sai:"สายงาน (ก)", khet:"กฟก.1", changwat:"กฟจ.กท.", sakha:"ผวก.", checks:[0,1,1,1]},
+  {id:"307957",name:"พโยมสฤษฎ์ ศรีพัฒนานนท์", sai:"สายงาน (ก)", khet:"กฟก.1", changwat:"กฟจ.กท.", sakha:"ผชก.(วก)", checks:[0,0,0,0]},
+  {id:"400658",name:"ธีระ ศรีใหม่",      sai:"สายงาน (ก)", khet:"กฟก.1", changwat:"กฟจ.กท.", sakha:"ผชก.(วก)", checks:[0,0,0,0]},
+  {id:"416049",name:"ธีรพันธ์ จันทร์จินดา",sai:"สายงาน (ก)", khet:"กฟก.1",changwat:"กฟจ.กท.", sakha:"ผชก.(วก)", checks:[0,0,0,0]},
+  {id:"470182",name:"ธนภัค เกิดโพธิ์คำ", sai:"สายงาน (ก)", khet:"กฟก.1", changwat:"กฟจ.อย.", sakha:"ผชก.(วก)", checks:[0,0,0,0]},
+  {id:"478619",name:"ดาราวรรณ พรหมกสิกร",sai:"สายงาน (ก)", khet:"กฟก.1", changwat:"กฟจ.ปท.", sakha:"ผชก.(วก)", checks:[0,0,0,0]},
+  {id:"460307",name:"กิตติเมศร์ กรพัฒนสวัสดิ์",sai:"สายงาน (ก)",khet:"กฟก.1",changwat:"กฟจ.นบ.",sakha:"ผวก.", checks:[1,1,1,1]},
+  {id:"465852",name:"อุมาพร เฟื่องฟู",   sai:"ฝ่ายเลขาฯ (ฝลอ)", khet:"—", changwat:"—", sakha:"สตภ. ผวก.", checks:[0,0,0,0]},
+  {id:"508371",name:"อิทธิกร สอนดี",     sai:"สายงาน (น)", khet:"กฟน.2", changwat:"กฟจ.พล.", sakha:"ผวก. นตภ.7", checks:[0,0,0,0]},
+  {id:"32459", name:"ณัฐเมศร์ พิชัยสวรรค์",sai:"สายงาน (น)",khet:"กฟน.2", changwat:"กฟจ.พล.", sakha:"กฟส.วม.", checks:[1,0,1,0]},
+  {id:"32460", name:"พิชชาพร ต้นวงศ์",   sai:"สายงาน (น)", khet:"กฟน.2", changwat:"กฟจ.ตก.", sakha:"กฟส.วังเจ้า", checks:[0,1,1,1]},
+  {id:"32461", name:"กนกกานต์ กัลยา",    sai:"สายงาน (น)", khet:"กฟน.2", changwat:"กฟจ.นน.", sakha:"กฟส.ชก.", checks:[1,1,0,1]},
+  {id:"32462", name:"สหรัตน์ ยิ้มน้อย",  sai:"สายงาน (ต)", khet:"กฟต.1", changwat:"กฟจ.ปข.", sakha:"กฟส.นอน.", checks:[0,0,1,0]},
+  {id:"32463", name:"ปพิชญา สุขแก้ว",    sai:"สายงาน (น)", khet:"กฟน.2", changwat:"กฟจ.นน.", sakha:"ผคพ.", checks:[1,0,0,1]},
+  {id:"32464", name:"ศิริพร กระต่ายทอง", sai:"สายงาน (น)", khet:"กฟน.2", changwat:"กฟจ.พจ.", sakha:"ผคพ.", checks:[0,1,0,0]},
+  {id:"32465", name:"พรพนา ปัญญาแฝง",    sai:"สายงาน (น)", khet:"กฟน.2", changwat:"กฟจ.พร.", sakha:"กฟส.สอง", checks:[1,1,1,0]},
+  {id:"32466", name:"สุรพงศ์ เสือยิ้ม",  sai:"สายงาน (น)", khet:"กฟน.2", changwat:"กฟจ.กพ.", sakha:"กฟส.ขณ.", checks:[0,0,1,1]},
+  {id:"32467", name:"อมรฤทธิ์ วนาพันธพรกุล",sai:"สายงาน (น)",khet:"กฟน.2",changwat:"กฟจ.พจ.",sakha:"กฟส.ตห.", checks:[1,1,1,1]},
+  {id:"442480",name:"อารีย์ อัครวัชรางกูร",sai:"ฝ่ายเลขาฯ (ฝลอ)",khet:"—",changwat:"—",sakha:"สตภ. ผวก.",checks:[1,1,1,1]},
+  {id:"441997",name:"อาภรณ์ ตั้งกำเนิดพร",sai:"สายงาน (น)",khet:"กฟน.1",changwat:"กฟจ.ชม.",sakha:"ผวก. นตภ.9",checks:[0,0,0,0]},
+];
+
+let activeFilters = { sai: new Set(), khet: new Set(), changwat: new Set() };
+let searchText = '';
+
+function toggleFilter(el) {
+  const g = el.dataset.group, v = el.dataset.val;
+  if (activeFilters[g].has(v)) { activeFilters[g].delete(v); el.classList.remove('active'); }
+  else { activeFilters[g].add(v); el.classList.add('active'); }
+  // เมื่อเปลี่ยนเขต ให้ล้าง กฟจ. ที่ไม่อยู่ใน scope ใหม่
+  if (g === 'khet') renderChangwatList();
+  renderAll();
+}
+
+function clearFilter(g) {
+  activeFilters[g].clear();
+  document.querySelectorAll(`[data-group="${g}"]`).forEach(el => el.classList.remove('active'));
+  if (g === 'khet') renderChangwatList();
+  renderAll();
+}
+
+// สร้าง กฟจ. list แบบ cascading จากเขตที่เลือก
+function renderChangwatList() {
+  const container = document.getElementById('filter-changwat');
+  const hint = document.getElementById('changwat-hint');
+  const selectedKhet = [...activeFilters.khet];
+
+  // รวม กฟจ. ที่อยู่ในเขตที่เลือก (ถ้าไม่เลือกเขต = ดึงจากข้อมูลจริง)
+  let changwatSet;
+  if (selectedKhet.length === 0) {
+    // ดึงจาก ALL_DATA ทั้งหมด
+    changwatSet = [...new Set(ALL_DATA.map(r => r.changwat).filter(v => v && v !== '—'))].sort();
+    hint.textContent = `ทั้งหมด ${changwatSet.length} จังหวัด`;
+  } else {
+    const fromMap = selectedKhet.flatMap(k => CHANGWAT_BY_KHET[k] || []);
+    const fromData = ALL_DATA.filter(r => selectedKhet.includes(r.khet)).map(r => r.changwat);
+    changwatSet = [...new Set([...fromMap, ...fromData].filter(v => v && v !== '—'))].sort();
+    hint.textContent = `${selectedKhet.join(', ')} · ${changwatSet.length} จังหวัด`;
+  }
+
+  // ลบ กฟจ. ที่เลือกอยู่แต่ไม่อยู่ใน scope ใหม่แล้ว
+  [...activeFilters.changwat].forEach(v => {
+    if (!changwatSet.includes(v)) activeFilters.changwat.delete(v);
+  });
+
+  container.innerHTML = changwatSet.map(v => {
+    const isActive = activeFilters.changwat.has(v);
+    return `<div class="tag${isActive?' active':''}" data-group="changwat" data-val="${v}" onclick="toggleFilter(this)">${v}</div>`;
+  }).join('');
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  searchText = e.target.value.trim().toLowerCase();
+  renderAll();
+});
+
+function getFiltered() {
+  return ALL_DATA.filter(r => {
+    if (activeFilters.sai.size && !activeFilters.sai.has(r.sai)) return false;
+    if (activeFilters.khet.size && !activeFilters.khet.has(r.khet)) return false;
+    if (activeFilters.changwat.size && !activeFilters.changwat.has(r.changwat)) return false;
+    if (searchText && !r.name.toLowerCase().includes(searchText) && !r.id.includes(searchText)) return false;
+    return true;
+  });
+}
+
+function renderActiveChips() {
+  const strip = document.getElementById('activeFilters');
+  strip.innerHTML = '';
+  [...activeFilters.sai].forEach(v => {
+    strip.innerHTML += `<div class="active-chip">🔹 ${v} <span class="rm" onclick="removeChip('sai','${v}')">✕</span></div>`;
+  });
+  [...activeFilters.khet].forEach(v => {
+    strip.innerHTML += `<div class="active-chip">📍 ${v} <span class="rm" onclick="removeChip('khet','${v}')">✕</span></div>`;
+  });
+  [...activeFilters.changwat].forEach(v => {
+    strip.innerHTML += `<div class="active-chip" style="background:rgba(13,148,136,0.15);border-color:rgba(13,148,136,0.4);color:var(--teal-light)">🏢 ${v} <span class="rm" onclick="removeChip('changwat','${v}')">✕</span></div>`;
+  });
+}
+
+function removeChip(g, v) {
+  activeFilters[g].delete(v);
+  document.querySelectorAll(`[data-group="${g}"][data-val="${v}"]`).forEach(el => el.classList.remove('active'));
+  if (g === 'khet') renderChangwatList();
+  renderAll();
+}
+
+function renderTable(data) {
+  const body = document.getElementById('hrTableBody');
+  if (!data.length) {
+    body.innerHTML = `<div style="padding:32px;text-align:center;color:var(--text-muted);">ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div>`;
+    return;
+  }
+  body.innerHTML = data.map(r => `
+    <div class="hr-row">
+      <div>
+        <div class="emp-id">${r.id}</div>
+        <div class="emp-name">${r.name}</div>
+      </div>
+      <div class="emp-sangkad">${r.changwat} · ${r.sakha} · ${r.khet !== '—' ? r.khet : ''} · ${r.sai}</div>
+      ${r.checks.map(c => `<div><div class="check ${c?'chk-y':'chk-n'}">${c?'✓':'✗'}</div></div>`).join('')}
+    </div>`).join('');
+}
+
+function renderStats(data) {
+  const total = data.length;
+  const done  = data.filter(r => r.checks.every(c => c)).length;
+  const pct   = total ? (done/total*100).toFixed(2) : 0;
+  document.getElementById('statTotal').textContent  = total.toLocaleString();
+  document.getElementById('statDone').textContent   = done.toLocaleString();
+  document.getElementById('statPending').textContent= (total-done).toLocaleString();
+  document.getElementById('statPct').textContent    = pct + '%';
+  document.getElementById('pctBar').style.width     = pct + '%';
+  document.getElementById('showCount').textContent  = total.toLocaleString();
+  document.getElementById('totalCount').textContent = ALL_DATA.length.toLocaleString();
+}
+
+function renderAll() {
+  const d = getFiltered();
+  renderActiveChips();
+  renderTable(d);
+  renderStats(d);
+}
+
+function exportCSV() {
+  const d = getFiltered();
+  const hdr = ['รหัส','ชื่อ-นามสกุล','สายงาน','เขต','จังหวัด','สาขา','#1','#2','#3','#4'];
+  const rows = d.map(r => [r.id, r.name, r.sai, r.khet, r.changwat, r.sakha, ...r.checks.map(c=>c?'✓':'✗')]);
+  const csv = '\uFEFF' + [hdr,...rows].map(r=>r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download = 'HR_Export.csv'; a.click();
+}
+
+function exportExcel() {
+  // simple TSV wrapped in excel-compatible HTML table
+  const d = getFiltered();
+  const hdr = ['รหัส','ชื่อ-นามสกุล','สายงาน','เขต','จังหวัด','สาขา','#1','#2','#3','#4'];
+  let table = '<table><tr>'+hdr.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+  d.forEach(r => {
+    table += '<tr>'+[r.id,r.name,r.sai,r.khet,r.changwat,r.sakha,...r.checks.map(c=>c?'Y':'N')].map(v=>`<td>${v}</td>`).join('')+'</tr>';
+  });
+  table += '</table>';
+  const blob = new Blob(['\uFEFF'+table],{type:'application/vnd.ms-excel;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'HR_Export.xls'; a.click();
+}
+
+// Init
+renderChangwatList();
+renderAll();
+</script>
+</body>
+</html>
