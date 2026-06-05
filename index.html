@@ -381,32 +381,57 @@ function loadDemo() {
 function processAndRender() {
   document.getElementById('loadingSubText').textContent = 'กำลัง Join ตาราง...';
 
-  // Build survey list (ordered by first appearance)
+  // ── Map field names จาก Tab Data (real field names) ──
+  // content_result อาจเป็น JSON string เช่น {"ค่าถาม1":"Item 1"} หรือ "1"/"0"
+  function parseAckResult(val) {
+    if (!val || val === '') return 0;
+    if (val === '1' || val === 1) return 1;
+    if (val === '0' || val === 0) return 0;
+    // JSON string เช่น {"ค่าถาม1":"Item 1"} = ตอบแล้ว
+    try { const p = JSON.parse(val); return (p && typeof p === 'object') ? 1 : 0; } catch(e) {}
+    // มีค่าอะไรก็ตาม = ตอบแล้ว
+    return val.trim() !== '' ? 1 : 0;
+  }
+
+  // Build survey list จาก survey_name + survey_id
   const surveyMap = new Map();
   ACK_DATA.forEach(r => {
-    if (!surveyMap.has(r.survey_id)) {
-      surveyMap.set(r.survey_id, { id: r.survey_id, name: r.survey_name, link: r.Link_Label || '#' });
-    }
+    const sid  = r.survey_id  || r.survey_id  || '';
+    const name = r.survey_name || sid;
+    const link = r.Link_Label || r.link_label || '#';
+    if (sid && !surveyMap.has(sid)) surveyMap.set(sid, { id: sid, name, link });
   });
   SURVEYS = [...surveyMap.values()];
 
-  // Pivot ACK: { personal_id -> { survey_id: '1'|'0' } }
+  // Pivot ACK: { personal_id -> { survey_id: 1|0 } }
   const ackPivot = {};
   ACK_DATA.forEach(r => {
-    if (!ackPivot[r.personal_id]) ackPivot[r.personal_id] = {};
-    ackPivot[r.personal_id][r.survey_id] = r.content_result;
+    const pid = String(r.personal_id || '').trim();
+    const sid = String(r.survey_id   || '').trim();
+    if (!pid || !sid) return;
+    if (!ackPivot[pid]) ackPivot[pid] = {};
+    // ถ้า survey เดิมตอบแล้ว (1) ไม่ทับด้วย 0
+    const cur = parseAckResult(r.content_result);
+    if (!ackPivot[pid][sid] || cur === 1) ackPivot[pid][sid] = cur;
   });
 
   // Join HR + ACK — HR เป็นหลัก
   JOINED = HR_DATA.map(hr => {
-    const pid  = hr['รหัสพนักงาน'] || hr['personal_id'] || '';
+    // รองรับทั้ง field ภาษาไทยและ field จาก Tab HR_Data จริง
+    const pid  = String(hr['รหัสพนักงาน'] || hr['personal_id'] || '').trim();
+    const name = hr['ชื่อ'] || hr['full_name'] || '';
+    const pos  = hr['ตำแหน่ง'] || hr['position'] || hr['dept_sap_short'] || '';
+    // สายงาน — ลองหลาย field
+    const sai  = hr['สายงาน'] || hr['สายงาน_groups'] || hr['สายงาน/เขต'] || '';
+    const khet = hr['สายงาน/เขต'] || hr['สายงาน_Initialed'] || '';
+    const sangkad = hr['สังกัดเต็ม'] || hr['dept_sap_short'] || pos;
+    const dept = extractDept(sangkad);
     const acks = ackPivot[pid] || {};
-    const checks = SURVEYS.map(s => acks[s.id] === '1' ? 1 : acks[s.id] === '0' ? 0 : null);
-    // extract สายงาน/เขต/dept
-    const sai   = hr['สายงาน'] || '';
-    const khet  = hr['สายงาน/เขต'] || '';
-    const dept  = extractDept(hr['สังกัดเต็ม'] || '');
-    return { pid, name: hr['ชื่อ'] || hr['full_name'] || '', position: hr['ตำแหน่ง'] || '', sai, khet, dept, sangkad: hr['สังกัดเต็ม'] || '', checks };
+    const checks = SURVEYS.map(s => {
+      const v = acks[s.id];
+      return v === 1 ? 1 : v === 0 ? 0 : null; // null = ยังไม่มีข้อมูล
+    });
+    return { pid, name, position: pos, sai, khet, dept, sangkad, checks };
   });
 
   buildSidebarFilters();
