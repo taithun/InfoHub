@@ -396,9 +396,8 @@ function processAndRender() {
   // Build survey list จาก survey_name + survey_id
   const surveyMap = new Map();
   ACK_DATA.forEach(r => {
-    const sid  = r.survey_id  || r.survey_id  || '';
+    const sid  = r.survey_id || '';
     const name = r.survey_name || sid;
-    const link = r.Link_Label || r.link_label || '#';
     const link = 'https://xcho.pea.co.th/inbox/reply/' + sid;
     if (sid && !surveyMap.has(sid)) surveyMap.set(sid, { id: sid, name, link });
   });
