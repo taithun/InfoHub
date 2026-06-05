@@ -418,13 +418,14 @@ function processAndRender() {
   // Join HR + ACK — HR เป็นหลัก
   JOINED = HR_DATA.map(hr => {
     // รองรับทั้ง field ภาษาไทยและ field จาก Tab HR_Data จริง
-    const pid  = String(hr['รหัสพนักงาน'] || hr['personal_id'] || '').trim();
-    const name = hr['ชื่อ'] || hr['full_name'] || '';
-    const pos  = hr['ตำแหน่ง'] || hr['position'] || hr['dept_sap_short'] || '';
-    // สายงาน — ลองหลาย field
-    const sai  = hr['สายงาน'] || hr['สายงาน_groups'] || hr['สายงาน/เขต'] || '';
-    const khet = hr['สายงาน/เขต'] || hr['สายงาน_Initialed'] || '';
-    const sangkad = hr['สังกัดเต็ม'] || hr['dept_sap_short'] || pos;
+    const pid  = String(hr['รหัสพนักงาน'] || '').trim();
+    const name = String(hr['ชื่อ'] || '').trim();
+    const pos  = String(hr['ตำแหน่ง'] || '').trim();
+    const sai  = String(hr['สายงาน'] || '').trim();
+    // กรอง khet ให้เหลือเฉพาะรหัสเขต (กฟก/กฟฉ/กฟต/กฟน + ตัวเลข)
+    const rawKhet = String(hr['สายงาน/เขต'] || '').trim();
+    const khet = /^กฟ[กฉตน]\.\d+$/.test(rawKhet) ? rawKhet : '';
+    const sangkad = String(hr['สังกัดเต็ม'] || '').trim();
     const dept = extractDept(sangkad);
     const acks = ackPivot[pid] || {};
     const checks = SURVEYS.map(s => {
@@ -443,8 +444,12 @@ function processAndRender() {
 }
 
 function extractDept(sangkad) {
-  const m = sangkad.match(/กฟจ\.[^\s]+/);
-  return m ? m[0].replace(/\.$/,'') : '';
+  // ดึง กฟจ.XXX จาก สังกัดเต็ม
+  const m = sangkad.match(/กฟจ\.[ก-ฮa-zA-Z]+\.?/);
+  if (m) return m[0].replace(/\.$/, '');
+  // ถ้าไม่มี กฟจ. ลองดึงหน่วยงานแรกสุด
+  const first = sangkad.split(' ')[0];
+  return first || '';
 }
 
 // ── Build Sidebar Filters ──
@@ -455,8 +460,8 @@ function buildSidebarFilters() {
     `<div class="tag" data-group="sai" data-val="${v}" onclick="toggleFilter(this)">${v}</div>`
   ).join('');
 
-  // เขต
-  const khetList = [...new Set(JOINED.map(r => r.khet).filter(v => v && v !== '—'))].sort();
+  // เขต — กรองเฉพาะรหัสเขตจริง กฟก/กฟฉ/กฟต/กฟน + ตัวเลข
+  const khetList = [...new Set(JOINED.map(r => r.khet).filter(v => v && /^กฟ[กฉตน]\.\d+$/.test(v)))].sort();
   document.getElementById('filter-khet').innerHTML = khetList.map(v =>
     `<div class="khet-tag" data-group="khet" data-val="${v}" onclick="toggleFilter(this)">${v}</div>`
   ).join('');
