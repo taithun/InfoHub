@@ -399,6 +399,7 @@ function processAndRender() {
     const sid  = r.survey_id  || r.survey_id  || '';
     const name = r.survey_name || sid;
     const link = r.Link_Label || r.link_label || '#';
+    const link = 'https://xcho.pea.co.th/inbox/reply/' + sid;
     if (sid && !surveyMap.has(sid)) surveyMap.set(sid, { id: sid, name, link });
   });
   SURVEYS = [...surveyMap.values()];
@@ -432,7 +433,8 @@ function processAndRender() {
       const v = acks[s.id];
       return v === 1 ? 1 : v === 0 ? 0 : null; // null = ยังไม่มีข้อมูล
     });
-    return { pid, name, position: pos, sai, khet, dept, sangkad, checks };
+    const for_search = String(hr['For_Search'] || '').trim();
+    return { pid, name, position: pos, sai, khet, dept, sangkad, for_search, checks };
   });
 
   buildSidebarFilters();
@@ -537,7 +539,7 @@ function getFiltered() {
     if (activeFilters.sai.size  && !activeFilters.sai.has(r.sai))   return false;
     if (activeFilters.khet.size && !activeFilters.khet.has(r.khet)) return false;
     if (activeFilters.dept.size && !activeFilters.dept.has(r.dept)) return false;
-    if (searchText && !r.name.toLowerCase().includes(searchText) && !r.pid.includes(searchText)) return false;
+    if (searchText && !String(r.for_search || r.name || '').toLowerCase().includes(searchText) && !r.pid.includes(searchText)) return false;
     const allDone    = r.checks.every(c => c === 1);
     const anyPending = r.checks.some(c => c !== 1);
     if (showMode === 'done'    && !allDone)    return false;
